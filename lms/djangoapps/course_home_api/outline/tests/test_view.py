@@ -53,16 +53,6 @@ class OutlineTabTestViews(BaseCourseHomeTests):
         response = self.client.get(self.url)
         assert response.status_code == 200
 
-        course_goals = response.data.get('course_goals')
-        goal_options = course_goals['goal_options']
-        if enrollment_mode == CourseMode.VERIFIED:
-            assert goal_options == []
-        else:
-            assert len(goal_options) > 0
-
-            selected_goal = course_goals['selected_goal']
-            assert selected_goal is None
-
         course_tools = response.data.get('course_tools')
         assert course_tools
         assert course_tools[0]['analytics_id'] == 'edx.bookmarks'
@@ -86,9 +76,6 @@ class OutlineTabTestViews(BaseCourseHomeTests):
             CourseEnrollment.unenroll(self.user, self.course.id)
         response = self.client.get(self.url)
         assert response.status_code == 200
-
-        course_goals = response.data.get('course_goals')
-        assert course_goals['goal_options'] == []
 
         course_tools = response.data.get('course_tools')
         assert len(course_tools) == 0
@@ -220,25 +207,6 @@ class OutlineTabTestViews(BaseCourseHomeTests):
         assert response.data['access_expiration']['expiration_date'] == deadline
 
     @override_waffle_flag(ENABLE_COURSE_GOALS, active=True)
-    def test_post_course_goal_deprecated(self):
-        CourseEnrollment.enroll(self.user, self.course.id, CourseMode.AUDIT)
-
-        post_data = {
-            'course_id': self.course.id,
-            'goal_key': 'certify'
-        }
-        post_course_goal_response = self.client.post(reverse('course-home:save-course-goal'), post_data)
-        assert post_course_goal_response.status_code == 200
-
-        response = self.client.get(self.url)
-        assert response.status_code == 200
-
-        course_goals = response.data.get('course_goals')
-        selected_goal = course_goals['selected_goal']
-        assert selected_goal is not None
-        assert selected_goal['key'] == 'certify'
-
-    @override_waffle_flag(ENABLE_COURSE_GOALS, active=True)
     def test_post_course_goal(self):
         """ Test that the api returns the correct response when saving a goal """
         CourseEnrollment.enroll(self.user, self.course.id, CourseMode.AUDIT)
@@ -260,12 +228,10 @@ class OutlineTabTestViews(BaseCourseHomeTests):
 
         course_goals = response.json()['course_goals']
         expected_course_goals = {
-            'goal_options': [],
             'selected_goal': {
                 'days_per_week': 1,
                 'subscribed_to_reminders': True
             },
-            'weekly_learning_goal_enabled': True
         }
         assert course_goals == expected_course_goals
 
