@@ -226,18 +226,20 @@ class CoursewareMeta:
         """
         Returns a dict of course goals
         """
-        course_goals = {
-            'selected_goal': None
-        }
         user_is_enrolled = CourseEnrollment.is_enrolled(self.effective_user, self.course_key)
         if (user_is_enrolled and ENABLE_COURSE_GOALS.is_enabled(self.course_key)):
+            course_goals = {
+                'selected_goal': None,
+                'learning_goal_enabled': True,
+            }
             selected_goal = get_course_goal(self.effective_user, self.course_key)
             if selected_goal:
                 course_goals['selected_goal'] = {
                     'days_per_week': selected_goal.days_per_week,
                     'subscribed_to_reminders': selected_goal.subscribed_to_reminders,
                 }
-        return course_goals
+            return course_goals
+
 
     @property
     def user_has_passing_grade(self):
@@ -404,10 +406,10 @@ class CoursewareInformation(RetrieveAPIView):
             * masquerading_expired_course: (bool) Whether this course is expired for the masqueraded user
             * upgrade_deadline: (str) Last chance to upgrade, in ISO 8601 notation (or None if can't upgrade anymore)
             * upgrade_url: (str) Upgrade linke (or None if can't upgrade anymore)
-        course_goals:
-            selected_goal:
-                days_per_week: (int) The number of days the learner wants to learn per week
-                subscribed_to_reminders: (bool) Whether the learner wants email reminders about their goal
+        * course_goals:
+            * selected_goal:
+                * days_per_week: (int) The number of days the learner wants to learn per week
+                * subscribed_to_reminders: (bool) Whether the learner wants email reminders about their goal
         * effort: A textual description of the weekly hours of effort expected
             in the course.
         * end: Date the course ends, in ISO 8601 notation
@@ -592,7 +594,8 @@ class SequenceMetadata(DeveloperErrorViewMixin, APIView):
         try:
             usage_key = UsageKey.from_string(usage_key_string)
         except InvalidKeyError:
-            raise NotFound(f"Invalid usage key: '{usage_key_string}'.")  # lint-amnesty, pylint: disable=raise-missing-from
+            raise NotFound(
+                f"Invalid usage key: '{usage_key_string}'.")  # lint-amnesty, pylint: disable=raise-missing-from
 
         _, request.user = setup_masquerade(
             request,
@@ -648,7 +651,7 @@ class Resume(DeveloperErrorViewMixin, APIView):
         JwtAuthentication,
         SessionAuthenticationAllowInactiveUser,
     )
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, course_key_string, *args, **kwargs):  # lint-amnesty, pylint: disable=unused-argument
         """
@@ -702,7 +705,7 @@ class Celebration(DeveloperErrorViewMixin, APIView):
         BearerAuthenticationAllowInactiveUser,
         SessionAuthenticationAllowInactiveUser,
     )
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
     http_method_names = ['post']
 
     def post(self, request, course_key_string, *args, **kwargs):  # lint-amnesty, pylint: disable=unused-argument

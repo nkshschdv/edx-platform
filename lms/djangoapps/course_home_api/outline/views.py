@@ -251,6 +251,7 @@ class OutlineTabView(RetrieveAPIView):
             if (is_enrolled and ENABLE_COURSE_GOALS.is_enabled(course_key)):
                 course_goals = {
                     'selected_goal': None,
+                    'learning_goal_enabled': True,
                 }
                 selected_goal = get_course_goal(request.user, course_key)
                 if selected_goal:

@@ -67,6 +67,7 @@ class CourseGoalsSerializer(serializers.Serializer):
     Serializer for Course Goal data
     """
     selected_goal = serializers.DictField()
+    learning_goal_enabled = serializers.BooleanField(default=False)
 
 
 class CourseToolSerializer(serializers.Serializer):
